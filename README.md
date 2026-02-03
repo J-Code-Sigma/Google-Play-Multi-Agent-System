@@ -30,7 +30,7 @@ graph TD
     Architect -- "PRD & Build Plan" --> Output((Done))
 
     %% Styling
-    linkStyle default stroke:#aaa,stroke-width:2px,color:#aaa;
+    linkStyle default stroke:#aaa,stroke-width:2px;
 ```
 
 ## The Stack
