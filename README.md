@@ -1,47 +1,87 @@
-# Scraper-Powered Multi-Agent Research Squad
+================================================================================
+PROJECT: DISTRIBUTED A2A RESEARCH CLUSTER
+FILE: README.md
+================================================================================
 
-This project implements a Multi-Agent System (MAS) that combines low-cost local hardware with high-intelligence cloud models to automate product research and gap analysis.
+# Scraper-Powered Multi-Agent Research Squad (A2A Distributed)
+
+This project implements a Distributed Multi-Agent System (MAS) that leverages the **A2A Protocol** to automate product research, market gap analysis, and PRD generation across a heterogeneous compute cluster.
+
+By offloading "grunt work" to local legacy hardware and "high-reasoning" to cloud models, the system optimizes for both cost and intelligence.
 
 ## Architecture
 
-The system uses a tiered approach to balance cost and intelligence:
+The system is decentralized. Instead of a single master script, each node acts as a specialist service communicating via **JSON-RPC 2.0**. A central Gateway (Pi 5) handles task routing based on hardware capability.
+
+
 
 ```mermaid
 graph TD
-    %% Subgraphs
-    subgraph Local_Tier["Local Tier (GTX 960)"]
-        Scout[("<b>The Scout</b><br/>Llama 3.2 (via llama-cpp)<br/>+ Google Play Scraper")]
-        style Scout fill:#333,stroke:#fff,stroke-width:2px,color:#fff
+    %% Nodes
+    User((User))
+    Gateway["<b>The Gateway (Pi 5)</b><br/>A2A Router & Discovery<br/>(Task Distribution)"]
+    
+    subgraph Local_Compute_Cluster["Local A2A Fleet"]
+        Orchestrator["<b>The Orchestrator (G16)</b><br/>Llama 3.2 8B<br/>(Logic & Reasoning)"]
+        Librarian["<b>The Librarian (ITX)</b><br/>Mistral 7B / Vector DB<br/>(Knowledge & RAG)"]
+        Scout["<b>The Scout (GTX 960)</b><br/>Llama 3.2 1B / Play Scraper<br/>(Data Extraction)"]
     end
 
-    subgraph Cloud_Intelligence["Cloud Tier: High Intelligence"]
-        direction TB
-        Analyst["<b>The Analyst</b><br/>Claude Sonnet 4.5<br/>(Product Determination)"]
+    subgraph Cloud_Tier["Cloud Intelligence"]
+        Analyst["<b>The Analyst</b><br/>Claude Sonnet 4.5<br/>(Market Gap Analysis)"]
         Architect["<b>The Architect</b><br/>Gemini 3 Pro<br/>(PRD & Build Plan)"]
-        
-        style Analyst fill:#D97757,stroke:#fff,stroke-width:0px,color:#fff
-        style Architect fill:#4285F4,stroke:#fff,stroke-width:0px,color:#fff
     end
 
     %% Flow
-    Start((Start)) --> Scout
-    Scout -- "Raw Details" --> Analyst
-    Analyst -- "Product Concept" --> Architect
-    Architect -- "PRD & Build Plan" --> Output((Done))
+    User -->|Define Topic| Gateway
+    Gateway -->|Delegate| Orchestrator
+    Orchestrator -->|Request Scrape| Scout
+    Scout -->|Return Raw Data| Librarian
+    Librarian -->|Contextualize| Orchestrator
+    Orchestrator -->|Evaluate Case| Analyst
+    Analyst -->|Define Concept| Architect
+    Architect -->|Final PRD| User
 
     %% Styling
-    linkStyle default stroke:#aaa,stroke-width:2px;
+    style Gateway fill:#C51A4A,stroke:#fff,color:#fff
+    style Orchestrator fill:#4285F4,stroke:#fff,color:#fff
+    style Librarian fill:#34A853,stroke:#fff,color:#fff
+    style Scout fill:#333,stroke:#fff,color:#fff
+    style Analyst fill:#D97757,stroke:#fff,color:#fff
+    style Architect fill:#4285F4,stroke:#fff,color:#fff
 ```
 
-## The Stack
+# Distributed A2A Fleet Overview
 
-- **Local "Grunt Work"**: `Llama 3.2` running on a GTX 960 via `llama-cpp`. Handles initial scraping and filtering of the Google Play Store.
-- **Analysis**: `Claude Sonnet 4.5`. Digs through the "Scout's" findings to identify viable market gaps.
-- **Architecture**: `Gemini 3 Pro`. Takes the validated concept and generates a comprehensive PRD and implementation plan.
+## The Fleet (Hardware & Roles)
 
-## The Loop
+| Node | Role | Hardware | Primary Model / Tool |
+| :--- | :--- | :--- | :--- |
+| **Gateway** | Task Routing / Discovery | Raspberry Pi 5 | A2A Router (FastAPI) |
+| **Orchestrator** | Logic / Reasoning | ASUS ROG G16 | Llama 3.2 8B |
+| **Librarian** | Context / RAG | Mini-ITX (RTX 3050) | Mistral 7B + ChromaDB |
+| **Scout** | Web Scraping / Grunt Work | Desktop (GTX 960) | Llama 3.2 1B + Play Scraper |
+| **Cloud Tier** | Synthesis & Final Design | AWS/Google/Anthropic | Claude 4.5 / Gemini 3 Pro |
 
-1. **Scout**: Hits the Play Store using custom scraping tools to gather raw app data.
-2. **Analyst**: Reviews the scraped data to determine if a good product opportunity exists.
-3. **Architect**: If a business case is confirmed, drafts the PRD and build plan.
-# Google-Play-Multi-Agent-System
+---
+
+## The Protocol: A2A (Agent-to-Agent)
+All nodes adhere to the A2A communication standard to ensure the cluster remains modular and scalable.
+
+* **Discovery**: Each node hosts an Agent Card at `/.well-known/agent.json` defining its capabilities (e.g., `web_scrape`, `vector_search`).
+* **Communication**: Task requests and results are exchanged via **JSON-RPC 2.0** over HTTP.
+* **Statelessness**: Workers are stateless; the **Orchestrator (G16)** maintains the session state, while the **Librarian (ITX)** maintains the long-term knowledge base.
+
+---
+
+## The Research Loop
+1.  **Scout (GTX 960)**: Executes raw data extraction from the Google Play Store using custom scrapers.
+2.  **Librarian (ITX)**: Cleans the data, generates embeddings, and stores them in a local vector database for rapid retrieval.
+3.  **Orchestrator (G16)**: Queries the Librarian to identify trends and coordinates with the Cloud Tier for deep analysis.
+4.  **Strategist (Cloud)**: Performs the final "Heavy Lifting"—identifying viable market gaps (**Claude 4.5**) and drafting the technical PRD (**Gemini 3 Pro**).
+
+---
+
+## Integration Notes
+* **Networking**: All local nodes must be on the same subnet with static IP assignments or local DNS resolution (e.g., `scout.local`).
+* **Security**: Internal A2A traffic is unauthenticated for performance, but the Gateway acts as the firewall for external requests.
